@@ -1,0 +1,137 @@
+services:
+  db:
+    image: postgres:16
+    container_name: openeducat_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-odoo}
+      - POSTGRES_USER=${DB_USER:-odoo}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - openeducat_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odoo} -d ${DB_NAME:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: openeducat_redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - openeducat_net
+
+  odoo:
+    image: odoo:18
+    container_name: openeducat_odoo
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HOST=${DB_HOST:-db}
+      - USER=${DB_USER:-odoo}
+      - PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PORT=${DB_PORT:-5432}
+      - ODOO_RC=/etc/odoo/odoo.conf
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo_addons:/mnt/extra-addons
+      - odoo_filestore:/var/lib/odoo
+      - ./config:/etc/odoo:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.openeducat.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.openeducat.entrypoints=websecure"
+      - "traefik.http.routers.openeducat.tls.certresolver=letsencrypt"
+      - "traefik.http.services.openeducat.loadbalancer.server.port=8069"
+    networks:
+      - openeducat_net
+      - proxy
+
+  # Traefik pour Coolify (optionnel - Coolify peut gérer SSL)
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik_openeducat
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ADMIN_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - proxy
+    profiles:
+      - traefik  # Utiliser avec: docker-compose --profile traefik up
+
+  backup:
+    image: postgres:16
+    container_name: openeducat_backup
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - odoo_filestore:/data/odoo_filestore:ro
+      - ./backups:/backups
+    entrypoint: |
+      sh -c "
+        apt-get update && apt-get install -y rclone cron
+        while true; do
+          echo 'Dumping DB at $$(date)...'
+          pg_dump -h db -U ${DB_USER:-odoo} -d ${DB_NAME:-odoo} -F c -b -v -f /backups/odoo_db_$$(date +%Y%m%d_%H%M%S).dump
+          if [ -n \"$$RCLONE_DROPBOX_TOKEN\" ]; then
+            echo 'Syncing to remote storage...'
+            rclone copy /data/odoo_filestore remote:openeducat_backups/files --progress || echo 'Remote sync failed'
+            rclone copy /backups remote:openeducat_backups/sql --progress || echo 'Remote sync failed'
+          fi
+          echo 'Backup completed at $$(date)'
+          # Nettoyer les anciens backups (garder 7 jours)
+          find /backups -name '*.dump' -mtime +7 -delete
+          sleep 86400
+        done
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - openeducat_net
+
+volumes:
+  db_data:
+  redis_data:
+  odoo_addons:
+  odoo_filestore:
+  traefik_letsencrypt:
+
+networks:
+  openeducat_net:
+    driver: bridge
+  proxy:
+    driver: bridge

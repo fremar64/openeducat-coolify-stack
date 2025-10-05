@@ -1,0 +1,53 @@
+# Fichiers d'environnement et de configuration sensibles
+.env
+.env.*
+!.env.example
+
+# Sauvegardes et logs
+/backups/*.dump
+/backups/*.sql
+/backups/*.log
+*.log
+*.dump
+
+# Données des volumes Docker
+/data/
+/postgres-data/
+/odoo-data/
+
+# Modules additionnels téléchargés
+/addons/*/
+!addons/.gitkeep
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.DS_Store
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Fichiers OS spécifiques
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Fichiers de synchronisation cloud
+*.dropbox.attrs
+*:com.dropbox.attrs
+*:Zone.Identifier
+
+# Certificats SSL
+*.pem
+*.key
+*.crt
+
+# Configuration locale
+docker-compose.override.yml
+config/odoo.local.conf

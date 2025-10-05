@@ -1,0 +1,98 @@
+# Configuration Docker Compose optimisée pour Coolify
+# Coolify gère automatiquement les SSL/TLS et les reverse proxy
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME:-odoo}
+      - POSTGRES_USER=${DB_USER:-odoo}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-odoo} -d ${DB_NAME:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  web:
+    image: odoo:18
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HOST=${DB_HOST:-db}
+      - USER=${DB_USER:-odoo}
+      - PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PORT=${DB_PORT:-5432}
+      - ODOO_RC=/etc/odoo/odoo.conf
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo_addons:/mnt/extra-addons
+      - odoo_filestore:/var/lib/odoo
+      - ./config:/etc/odoo:ro
+
+  # Service de backup optionnel
+  backup:
+    image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - odoo_filestore:/data/odoo_filestore:ro
+      - ./backups:/backups
+    entrypoint: |
+      sh -c "
+        apt-get update && apt-get install -y rclone cron > /dev/null 2>&1
+        while true; do
+          echo 'Backup started at $$(date)'
+          pg_dump -h db -U ${DB_USER:-odoo} -d ${DB_NAME:-odoo} -F c -b -v -f /backups/odoo_db_$$(date +%Y%m%d_%H%M%S).dump 2>/dev/null
+          if [ $$? -eq 0 ]; then
+            echo 'Database backup successful'
+          else
+            echo 'Database backup failed'
+          fi
+          
+          if [ -n \"$$RCLONE_DROPBOX_TOKEN\" ]; then
+            echo 'Syncing to remote storage...'
+            rclone copy /data/odoo_filestore remote:openeducat_backups/files --progress || echo 'Remote filestore sync failed'
+            rclone copy /backups remote:openeducat_backups/sql --progress || echo 'Remote SQL sync failed'
+          else
+            echo 'No remote storage configured'
+          fi
+          
+          # Nettoyer les anciens backups (garder 7 jours)
+          find /backups -name '*.dump' -mtime +7 -delete 2>/dev/null
+          echo 'Backup completed at $$(date)'
+          sleep 86400
+        done
+      "
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - backup  # Utiliser avec: docker-compose --profile backup up
+
+volumes:
+  db_data:
+  redis_data:
+  odoo_addons:
+  odoo_filestore:
