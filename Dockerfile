@@ -54,6 +54,11 @@ COPY init_openeducat.sh /usr/local/bin/init_openeducat.sh
 RUN sed -i 's/\r$//' /usr/local/bin/init_openeducat.sh \
     && chmod +x /usr/local/bin/init_openeducat.sh
 
+# Script d'alignement des identifiants admin
+COPY set_admin_credentials.sh /usr/local/bin/set_admin_credentials.sh
+RUN sed -i 's/\r$//' /usr/local/bin/set_admin_credentials.sh \
+    && chmod +x /usr/local/bin/set_admin_credentials.sh
+
 # Copier la configuration Odoo par défaut dans l'image
 RUN mkdir -p /etc/odoo
 COPY config/odoo.conf /etc/odoo/odoo.conf

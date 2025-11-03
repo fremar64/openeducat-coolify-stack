@@ -85,8 +85,9 @@ Une fois déployé :
 1. **Accédez à votre instance**
    ```
    https://openeducat.votre-domaine.com
-   ```
-
+   - Identifiant: l’email défini dans `ADMIN_EMAIL` (nous l’alignons comme login)
+   - Mot de passe : la valeur de `ODOO_ADMIN_PASSWORD`
+   - Remarque: si `ADMIN_EMAIL` n’est pas défini, l’identifiant par défaut reste `admin`.
 2. **Connexion initiale**
    - Email : `admin`
    - Mot de passe : Celui défini dans `ODOO_ADMIN_PASSWORD`
