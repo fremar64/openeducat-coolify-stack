@@ -23,6 +23,8 @@ DOMAIN=votre-domaine.com
 ADMIN_EMAIL=admin@votre-domaine.com
 ```
 
+⚙️ `docker-compose.coolify.yml` construit l'image locale définie dans le `Dockerfile`, qui embarque déjà OpenEduCat et exécute automatiquement `init_openeducat.sh` au premier démarrage. Un fichier sentinelle est placé dans le volume `odoo_filestore` pour éviter les réinstallations lors des redéploiements.
+
 ### 3. Déploiement
 1. Ajoutez votre domaine dans Coolify
 2. Cliquez sur **Deploy**
@@ -49,7 +51,7 @@ make install
 make start
 
 # OU démarrage manuel
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 Accès : http://localhost:8069

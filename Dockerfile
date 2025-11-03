@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     nano \
+    postgresql-client \
     python3-pip \
     python3-dev \
     libxml2-dev \
@@ -17,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     libldap2-dev \
     libsasl2-dev \
     libtiff5-dev \
-    libjpeg62-turbo-dev \
+    libjpeg-turbo8-dev \
     zlib1g-dev \
     libfreetype6-dev \
     liblcms2-dev \
@@ -28,7 +29,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer les dépendances Python spécifiques à OpenEduCat
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --break-system-packages \
     openpyxl \
     xlrd \
     xlwt \
@@ -44,7 +45,14 @@ WORKDIR /mnt/extra-addons
 
 # Script d’installation OpenEduCat
 COPY install_openeducat.sh /usr/local/bin/install_openeducat.sh
-RUN chmod +x /usr/local/bin/install_openeducat.sh && /usr/local/bin/install_openeducat.sh
+RUN sed -i 's/\r$//' /usr/local/bin/install_openeducat.sh \
+    && chmod +x /usr/local/bin/install_openeducat.sh \
+    && /usr/local/bin/install_openeducat.sh
+
+# Copier le script d'initialisation OpenEduCat
+COPY init_openeducat.sh /usr/local/bin/init_openeducat.sh
+RUN sed -i 's/\r$//' /usr/local/bin/init_openeducat.sh \
+    && chmod +x /usr/local/bin/init_openeducat.sh
 
 # Revenir à l’utilisateur odoo
 USER odoo

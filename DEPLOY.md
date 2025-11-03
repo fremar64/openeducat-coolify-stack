@@ -56,6 +56,8 @@ RCLONE_DROPBOX_TOKEN={"access_token":"votre_token"...}
 
 ⚠️ **Important** : Remplacez TOUS les mots de passe par des valeurs sécurisées !
 
+⚙️ Lors du premier déploiement, Coolify construit l'image locale définie par le `Dockerfile` et exécute `init_openeducat.sh` dans le conteneur `web`. Le script installe automatiquement les modules OpenEduCat essentiels puis crée un fichier sentinelle dans le volume `odoo_filestore` pour éviter toute réinstallation inutile lors des redéploiements.
+
 ### 3. Configuration du domaine
 
 1. **Ajouter votre domaine**

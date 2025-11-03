@@ -7,6 +7,8 @@
 COMPOSE_FILE = docker-compose.yml
 COOLIFY_COMPOSE_FILE = docker-compose.coolify.yml
 PROJECT_NAME = openeducat
+# Détecter la commande docker compose (v2) par défaut
+DC ?= docker compose
 
 help: ## Afficher cette aide
 	@echo "OpenEduCat - Commandes disponibles:"
@@ -16,59 +18,59 @@ help: ## Afficher cette aide
 install: ## Installer les dépendances et initialiser
 	@echo "📦 Installation d'OpenEduCat..."
 	@if [ ! -f .env ]; then cp .env.example .env; echo "⚠️  Pensez à éditer le fichier .env"; fi
-	@docker-compose -f $(COMPOSE_FILE) pull
+	@$(DC) -f $(COMPOSE_FILE) pull
 	@echo "✅ Installation terminée"
 
 start: ## Démarrer les services
 	@echo "🚀 Démarrage des services OpenEduCat..."
-	@docker-compose -f $(COMPOSE_FILE) up -d
+	@$(DC) -f $(COMPOSE_FILE) up -d --build
 	@echo "✅ Services démarrés"
 	@echo "🌐 OpenEduCat disponible sur: http://localhost:8069"
 
 start-coolify: ## Démarrer avec la configuration Coolify
 	@echo "🚀 Démarrage avec configuration Coolify..."
-	@docker-compose -f $(COOLIFY_COMPOSE_FILE) up -d
+	@$(DC) -f $(COOLIFY_COMPOSE_FILE) up -d --build
 	@echo "✅ Services démarrés"
 
 stop: ## Arrêter les services
 	@echo "⏹️  Arrêt des services..."
-	@docker-compose -f $(COMPOSE_FILE) down
+	@$(DC) -f $(COMPOSE_FILE) down
 	@echo "✅ Services arrêtés"
 
 restart: ## Redémarrer les services
 	@echo "🔄 Redémarrage des services..."
-	@docker-compose -f $(COMPOSE_FILE) restart
+	@$(DC) -f $(COMPOSE_FILE) restart
 	@echo "✅ Services redémarrés"
 
 logs: ## Voir les logs
-	@docker-compose -f $(COMPOSE_FILE) logs -f
+	@$(DC) -f $(COMPOSE_FILE) logs -f
 
 logs-odoo: ## Voir les logs d'Odoo uniquement
-	@docker-compose -f $(COMPOSE_FILE) logs -f odoo
+	@$(DC) -f $(COMPOSE_FILE) logs -f odoo
 
 backup: ## Faire une sauvegarde manuelle
 	@echo "💾 Sauvegarde en cours..."
-	@docker-compose -f $(COMPOSE_FILE) exec db pg_dump -U odoo -d odoo -F c -b -v -f /tmp/backup_$(shell date +%Y%m%d_%H%M%S).dump
+	@$(DC) -f $(COMPOSE_FILE) exec db pg_dump -U odoo -d odoo -F c -b -v -f /tmp/backup_$(shell date +%Y%m%d_%H%M%S).dump
 	@echo "✅ Sauvegarde terminée"
 
 shell-odoo: ## Accéder au shell d'Odoo
-	@docker-compose -f $(COMPOSE_FILE) exec odoo bash
+	@$(DC) -f $(COMPOSE_FILE) exec odoo bash
 
 shell-db: ## Accéder au shell PostgreSQL
-	@docker-compose -f $(COMPOSE_FILE) exec db psql -U odoo -d odoo
+	@$(DC) -f $(COMPOSE_FILE) exec db psql -U odoo -d odoo
 
 update-modules: ## Mettre à jour les modules OpenEduCat
 	@echo "🔄 Mise à jour des modules..."
-	@docker-compose -f $(COMPOSE_FILE) exec odoo odoo -u all -d odoo --stop-after-init --no-http
+	@$(DC) -f $(COMPOSE_FILE) exec odoo odoo -u all -d odoo --stop-after-init --no-http
 
 clean: ## Nettoyer les containers et volumes
 	@echo "🧹 Nettoyage..."
-	@docker-compose -f $(COMPOSE_FILE) down -v
+	@$(DC) -f $(COMPOSE_FILE) down -v
 	@docker system prune -f
 	@echo "✅ Nettoyage terminé"
 
 status: ## Voir le statut des services
-	@docker-compose -f $(COMPOSE_FILE) ps
+	@$(DC) -f $(COMPOSE_FILE) ps
 
 # Commandes de développement
 dev-setup: ## Configuration pour le développement

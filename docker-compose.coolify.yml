@@ -26,7 +26,9 @@ services:
       - redis_data:/data
 
   web:
-    image: odoo:18
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - .env
@@ -34,8 +36,23 @@ services:
       - HOST=${DB_HOST:-db}
       - USER=${DB_USER:-odoo}
       - PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_USER=${DB_USER:-odoo}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=${DB_PORT:-5432}
       - ODOO_RC=/etc/odoo/odoo.conf
+    command:
+      - bash
+      - -lc
+      - |
+        if [ ! -f /var/lib/odoo/.openeducat_initialized ]; then
+          /usr/local/bin/init_openeducat.sh && touch /var/lib/odoo/.openeducat_initialized
+        fi
+        exec odoo \
+          --db_host "${DB_HOST:-db}" \
+          --db_port "${DB_PORT:-5432}" \
+          --db_user "${DB_USER:-odoo}" \
+          --db_password "${DB_PASSWORD:-$POSTGRES_PASSWORD}"
     depends_on:
       db:
         condition: service_healthy
