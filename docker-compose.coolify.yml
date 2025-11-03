@@ -63,7 +63,7 @@ services:
       - "8069:8069"
     volumes:
       - odoo_filestore:/var/lib/odoo
-      - ./config:/etc/odoo:ro
+      # La config Odoo est intégrée dans l'image; pas de bind mount nécessaire côté Coolify
 
   # Service de backup optionnel
   backup:

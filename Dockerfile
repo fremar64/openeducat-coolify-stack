@@ -54,6 +54,11 @@ COPY init_openeducat.sh /usr/local/bin/init_openeducat.sh
 RUN sed -i 's/\r$//' /usr/local/bin/init_openeducat.sh \
     && chmod +x /usr/local/bin/init_openeducat.sh
 
+# Copier la configuration Odoo par défaut dans l'image
+RUN mkdir -p /etc/odoo
+COPY config/odoo.conf /etc/odoo/odoo.conf
+RUN chmod 0644 /etc/odoo/odoo.conf && chown -R odoo:odoo /etc/odoo
+
 # Revenir à l’utilisateur odoo
 USER odoo
 
