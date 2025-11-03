@@ -53,6 +53,7 @@ services:
           /usr/local/bin/init_openeducat.sh && touch /var/lib/odoo/.openeducat_initialized
         fi
         exec odoo \
+          -c /etc/odoo/odoo.conf \
           --db_host "${DB_HOST:-db}" \
           --db_port "${DB_PORT:-5432}" \
           --db_user "${DB_USER:-odoo}" \
@@ -65,7 +66,6 @@ services:
     ports:
       - "8069:8069"
     volumes:
-      - odoo_addons:/mnt/extra-addons
       - odoo_filestore:/var/lib/odoo
       - ./config:/etc/odoo:ro
     labels:
@@ -143,7 +143,6 @@ services:
 volumes:
   db_data:
   redis_data:
-  odoo_addons:
   odoo_filestore:
   traefik_letsencrypt:
 

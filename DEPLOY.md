@@ -226,6 +226,21 @@ docker logs openeducat_db
 # Consultez directement l'interface web
 ```
 
+### Avertissement Redis (mémoire)
+
+Si vous voyez l’avertissement suivant dans les logs Redis:
+
+> Memory overcommit must be enabled! … add 'vm.overcommit_memory = 1' to /etc/sysctl.conf
+
+Appliquez sur l’hôte (VPS) :
+
+```bash
+sudo sysctl -w vm.overcommit_memory=1
+echo 'vm.overcommit_memory = 1' | sudo tee -a /etc/sysctl.conf
+```
+
+Puis redémarrez le service Redis/containers.
+
 ## 📞 Support
 
 - **Documentation** : Consultez le README.md principal

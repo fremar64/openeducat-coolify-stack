@@ -18,6 +18,7 @@ echo "✅ Base de données prête"
 # Créer la base de données si elle n'existe pas
 echo "🔧 Initialisation de la base de données..."
 odoo \
+    -c /etc/odoo/odoo.conf \
     --db_host ${DB_HOST:-db} \
     --db_port ${DB_PORT:-5432} \
     --db_user ${DB_USER:-odoo} \
@@ -27,6 +28,7 @@ odoo \
 # Installer les modules OpenEduCat de base
 echo "📚 Installation des modules OpenEduCat..."
 odoo \
+    -c /etc/odoo/odoo.conf \
     --db_host ${DB_HOST:-db} \
     --db_port ${DB_PORT:-5432} \
     --db_user ${DB_USER:-odoo} \
@@ -34,6 +36,6 @@ odoo \
     -i openeducat_core,openeducat_core_enterprise,openeducat_admission,openeducat_student -d ${DB_NAME:-odoo} --stop-after-init --no-http
 
 echo "✅ OpenEduCat initialisé avec succès!"
-echo "🌐 Votre instance OpenEduCat est maintenant prête à l'adresse: http://localhost:8069"
+echo "🌐 Votre instance OpenEduCat est prête"
 echo "👤 Utilisateur admin: admin"
-echo "🔑 Mot de passe admin: ${ODOO_ADMIN_PASSWORD}"
+echo "� Mot de passe admin: caché dans les logs (voir variable d'environnement ODOO_ADMIN_PASSWORD)"
