@@ -131,26 +131,14 @@ services:
       - .env
     environment:
       - PGPASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${DB_NAME:-odoo}
+      - DB_USER=${DB_USER:-odoo}
+      - RCLONE_DROPBOX_TOKEN=${RCLONE_DROPBOX_TOKEN}
     volumes:
       - odoo_filestore:/data/odoo_filestore:ro
       - ./backups:/backups
-    entrypoint: |
-      sh -c "
-        apt-get update && apt-get install -y rclone cron
-        while true; do
-          echo 'Dumping DB at $$(date)...'
-          pg_dump -h db -U ${DB_USER:-odoo} -d ${DB_NAME:-odoo} -F c -b -v -f /backups/odoo_db_$$(date +%Y%m%d_%H%M%S).dump
-          if [ -n \"$$RCLONE_DROPBOX_TOKEN\" ]; then
-            echo 'Syncing to remote storage...'
-            rclone copy /data/odoo_filestore remote:openeducat_backups/files --progress || echo 'Remote sync failed'
-            rclone copy /backups remote:openeducat_backups/sql --progress || echo 'Remote sync failed'
-          fi
-          echo 'Backup completed at $$(date)'
-          # Nettoyer les anciens backups (garder 7 jours)
-          find /backups -name '*.dump' -mtime +7 -delete
-          sleep 86400
-        done
-      "
+      - ./backup.sh:/usr/local/bin/backup.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/backup.sh"]
     depends_on:
       db:
         condition: service_healthy
