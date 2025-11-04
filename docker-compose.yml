@@ -55,9 +55,7 @@ services:
         if [ ! -f /var/lib/odoo/.openeducat_initialized ]; then
           /usr/local/bin/init_openeducat.sh && touch /var/lib/odoo/.openeducat_initialized
         fi
-        if [ ! -f /var/lib/odoo/.admin_credentials_aligned ]; then
-          /usr/local/bin/set_admin_credentials.sh && touch /var/lib/odoo/.admin_credentials_aligned
-        fi
+        /usr/local/bin/set_admin_credentials.sh
         exec odoo \
           -c /etc/odoo/odoo.conf \
           --db_host "${DB_HOST:-db}" \
