@@ -177,6 +177,8 @@ sudo chown -R 999:999 ./backups
 
 - Documentation OpenEduCat : https://openeducat.org/
 - Documentation Odoo : https://www.odoo.com/documentation/
+- **Guide de déploiement** : [DEPLOY.md](./DEPLOY.md)
+- **Guide des sauvegardes** : [BACKUP.md](./BACKUP.md)
 - Issues GitHub : https://github.com/fremar64/openeducat-coolify-stack/issues
 
 ---
