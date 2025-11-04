@@ -22,8 +22,8 @@ import os
 
 try:
     import odoo
-    import odoo.modules.registry
-    from odoo import api
+    from odoo import api, SUPERUSER_ID
+    from odoo.modules.registry import Registry
     
     DB_HOST = os.environ.get('DB_HOST', 'db')
     DB_PORT = os.environ.get('DB_PORT', '5432')
@@ -46,25 +46,25 @@ try:
     
     print(f"   Connexion à {DB_NAME}@{DB_HOST}:{DB_PORT}...", file=sys.stderr)
     
-    with api.Environment.manage():
-        registry = odoo.modules.registry.Registry(DB_NAME)
-        with registry.cursor() as cr:
-            env = api.Environment(cr, odoo.SUPERUSER_ID, {})
-            admin = env.ref('base.user_admin')
-            
-            vals = {}
-            if email:
-                vals['email'] = email
-                vals['login'] = email
-                print(f"   → Login/Email: {email}", file=sys.stderr)
-            if vals:
-                admin.write(vals)
-            
-            if pwd:
-                admin.write({'password': pwd})
-                print(f"   → Mot de passe: *****", file=sys.stderr)
-            
-            cr.commit()
+    # Obtenir le registre et créer un environnement (Odoo 18)
+    registry = Registry(DB_NAME)
+    with registry.cursor() as cr:
+        env = api.Environment(cr, SUPERUSER_ID, {})
+        admin = env.ref('base.user_admin')
+        
+        vals = {}
+        if email:
+            vals['email'] = email
+            vals['login'] = email
+            print(f"   → Login/Email: {email}", file=sys.stderr)
+        if vals:
+            admin.write(vals)
+        
+        if pwd:
+            admin.write({'password': pwd})
+            print(f"   → Mot de passe: *****", file=sys.stderr)
+        
+        cr.commit()
     
     print("✅ Identifiants admin alignés avec succès", file=sys.stderr)
     sys.exit(0)
