@@ -64,6 +64,11 @@ COPY check_modules.sh /usr/local/bin/check_modules.sh
 RUN sed -i 's/\r$//' /usr/local/bin/check_modules.sh \
     && chmod +x /usr/local/bin/check_modules.sh
 
+# Script de backup automatique
+COPY backup.sh /usr/local/bin/backup.sh
+RUN sed -i 's/\r$//' /usr/local/bin/backup.sh \
+    && chmod +x /usr/local/bin/backup.sh
+
 # Copier la configuration Odoo par défaut dans l'image
 RUN mkdir -p /etc/odoo
 COPY config/odoo.conf /etc/odoo/odoo.conf

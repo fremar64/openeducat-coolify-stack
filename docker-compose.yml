@@ -124,7 +124,9 @@ services:
       - traefik  # Utiliser avec: docker-compose --profile traefik up
 
   backup:
-    image: postgres:16
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: openeducat_backup
     restart: unless-stopped
     env_file:
@@ -137,7 +139,6 @@ services:
     volumes:
       - odoo_filestore:/data/odoo_filestore:ro
       - ./backups:/backups
-      - ./backup.sh:/usr/local/bin/backup.sh:ro
     entrypoint: ["/bin/bash", "/usr/local/bin/backup.sh"]
     depends_on:
       db:

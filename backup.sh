@@ -16,10 +16,10 @@ else
 fi
 echo ""
 
-# Installer les dépendances
-echo "📦 Installation des dépendances..."
+# Installer les dépendances (postgresql-client déjà présent dans l'image)
+echo "📦 Installation de rclone..."
 apt-get update > /dev/null 2>&1
-apt-get install -y rclone cron > /dev/null 2>&1
+apt-get install -y rclone > /dev/null 2>&1
 echo "✅ Dépendances installées"
 echo ""
 
