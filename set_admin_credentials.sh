@@ -13,34 +13,46 @@ if [ -z "${ODOO_ADMIN_PASSWORD:-}" ] && [ -z "${ADMIN_EMAIL:-}" ]; then
   exit 0
 fi
 
-# Construire le script Python à exécuter dans odoo shell
 read -r -d '' PYCODE <<'PY'
 import os
-from odoo import tools
+import odoo
+import odoo.modules.registry
+from odoo import api
+
+DB_HOST = os.environ.get('DB_HOST', 'db')
+DB_PORT = os.environ.get('DB_PORT', '5432')
+DB_USER = os.environ.get('DB_USER', 'odoo')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', os.environ.get('POSTGRES_PASSWORD'))
+DB_NAME = os.environ.get('DB_NAME', 'odoo')
 
 email = os.environ.get('ADMIN_EMAIL')
 pwd = os.environ.get('ODOO_ADMIN_PASSWORD')
 
-admin = env.ref('base.user_admin')
-vals = {}
-if email:
-    vals['email'] = email
-    # Utiliser l'email comme identifiant de connexion pour correspondre à l'usage
-    vals['login'] = email
-if vals:
-    admin.write(vals)
-if pwd:
-    admin.write({'password': pwd})
+# Configurer l'accès DB pour Odoo
+odoo.tools.config['db_host'] = DB_HOST
+odoo.tools.config['db_port'] = DB_PORT
+odoo.tools.config['db_user'] = DB_USER
+odoo.tools.config['db_password'] = DB_PASSWORD
+
+with api.Environment.manage():
+    registry = odoo.modules.registry.Registry(DB_NAME)
+    with registry.cursor() as cr:
+        env = api.Environment(cr, odoo.SUPERUSER_ID, {})
+        admin = env.ref('base.user_admin')
+        vals = {}
+        if email:
+            vals['email'] = email
+            vals['login'] = email
+        if vals:
+            admin.write(vals)
+        if pwd:
+            admin.write({'password': pwd})
+        cr.commit()
 print("✅ Identifiants admin alignés")
 PY
 
-# Exécuter le script via odoo shell (non interactif)
-odoo \
-  -c /etc/odoo/odoo.conf \
-  --db_host ${DB_HOST:-db} \
-  --db_port ${DB_PORT:-5432} \
-  --db_user ${DB_USER:-odoo} \
-  --db_password ${DB_PASSWORD:-$POSTGRES_PASSWORD} \
-  -d ${DB_NAME:-odoo} shell <<<"${PYCODE}"
+python3 - <<PYTHON
+${PYCODE}
+PYTHON
 
 echo "✅ Alignement terminé"

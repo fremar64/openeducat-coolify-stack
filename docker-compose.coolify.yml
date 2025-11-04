@@ -36,6 +36,7 @@ services:
       - HOST=${DB_HOST:-db}
       - USER=${DB_USER:-odoo}
       - PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${DB_NAME:-odoo}
       - DB_HOST=${DB_HOST:-db}
       - DB_USER=${DB_USER:-odoo}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
