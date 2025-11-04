@@ -56,6 +56,19 @@ services:
           /usr/local/bin/init_openeducat.sh && touch /var/lib/odoo/.openeducat_initialized
         fi
         /usr/local/bin/set_admin_credentials.sh
+        # Forcer la mise à jour de la liste des modules au démarrage
+        echo "🔄 Mise à jour de la liste des modules Odoo..."
+        odoo \
+          -c /etc/odoo/odoo.conf \
+          --db_host "${DB_HOST:-db}" \
+          --db_port "${DB_PORT:-5432}" \
+          --db_user "${DB_USER:-odoo}" \
+          --db_password "${DB_PASSWORD:-$POSTGRES_PASSWORD}" \
+          -d ${DB_NAME:-odoo} \
+          --update=all \
+          --stop-after-init \
+          --no-http 2>&1 | grep -E "(Modules|openeducat|Updated|Installed)" || true
+        echo "✅ Liste des modules mise à jour"
         exec odoo \
           -c /etc/odoo/odoo.conf \
           --db_host "${DB_HOST:-db}" \
