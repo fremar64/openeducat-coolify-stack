@@ -25,6 +25,20 @@ odoo \
     --db_password ${DB_PASSWORD:-$POSTGRES_PASSWORD} \
     -i base -d ${DB_NAME:-odoo} --stop-after-init --no-http
 
+# Mettre à jour la liste des modules disponibles
+echo "🔄 Mise à jour de la liste des modules..."
+odoo \
+    -c /etc/odoo/odoo.conf \
+    --db_host ${DB_HOST:-db} \
+    --db_port ${DB_PORT:-5432} \
+    --db_user ${DB_USER:-odoo} \
+    --db_password ${DB_PASSWORD:-$POSTGRES_PASSWORD} \
+    -d ${DB_NAME:-odoo} --stop-after-init --no-http -u base
+
+# Lister les modules OpenEduCat détectés pour debug
+echo "📋 Modules OpenEduCat détectés:"
+ls -la /mnt/extra-addons/ | grep openeducat || echo "⚠️  Aucun module openeducat trouvé dans /mnt/extra-addons"
+
 # Installer les modules OpenEduCat de base
 echo "📚 Installation des modules OpenEduCat..."
 odoo \
@@ -33,7 +47,11 @@ odoo \
     --db_port ${DB_PORT:-5432} \
     --db_user ${DB_USER:-odoo} \
     --db_password ${DB_PASSWORD:-$POSTGRES_PASSWORD} \
-    -i openeducat_core,openeducat_core_enterprise,openeducat_admission,openeducat_student -d ${DB_NAME:-odoo} --stop-after-init --no-http
+    -i openeducat_core,openeducat_core_enterprise,openeducat_admission,openeducat_student -d ${DB_NAME:-odoo} --stop-after-init --no-http 2>&1 | tee /tmp/openeducat_install.log || {
+        echo "⚠️  Erreur lors de l'installation des modules, voir le log:"
+        cat /tmp/openeducat_install.log
+        echo "ℹ️  Les modules peuvent être installés manuellement depuis l'interface Apps"
+    }
 
 echo "✅ OpenEduCat initialisé avec succès!"
 echo "🌐 Votre instance OpenEduCat est prête"

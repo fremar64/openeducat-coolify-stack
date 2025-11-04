@@ -59,6 +59,11 @@ COPY set_admin_credentials.sh /usr/local/bin/set_admin_credentials.sh
 RUN sed -i 's/\r$//' /usr/local/bin/set_admin_credentials.sh \
     && chmod +x /usr/local/bin/set_admin_credentials.sh
 
+# Script de diagnostic des modules
+COPY check_modules.sh /usr/local/bin/check_modules.sh
+RUN sed -i 's/\r$//' /usr/local/bin/check_modules.sh \
+    && chmod +x /usr/local/bin/check_modules.sh
+
 # Copier la configuration Odoo par défaut dans l'image
 RUN mkdir -p /etc/odoo
 COPY config/odoo.conf /etc/odoo/odoo.conf
