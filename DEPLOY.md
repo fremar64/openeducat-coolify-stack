@@ -45,6 +45,7 @@ DB_PORT=5432
 
 # Configuration Odoo
 ODOO_ADMIN_PASSWORD=VotreMotDePasseAdminOdooSecurise456!
+ADMIN_EMAIL=admin@votre-domaine.com
 
 # Configuration domaine
 DOMAIN=openeducat.votre-domaine.com
@@ -85,7 +86,7 @@ Une fois déployé :
 1. **Accédez à votre instance**
    ```
    https://openeducat.votre-domaine.com
-   - Identifiant: l’email défini dans `ADMIN_EMAIL` (nous l’alignons comme login)
+    - Identifiant: l’email défini dans `ADMIN_EMAIL` (aligné automatiquement au premier démarrage)
    - Mot de passe : la valeur de `ODOO_ADMIN_PASSWORD`
    - Remarque: si `ADMIN_EMAIL` n’est pas défini, l’identifiant par défaut reste `admin`.
 2. **Connexion initiale**

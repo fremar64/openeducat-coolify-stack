@@ -41,6 +41,8 @@ services:
       - DB_USER=${DB_USER:-odoo}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
       - DB_PORT=${DB_PORT:-5432}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ODOO_ADMIN_PASSWORD=${ODOO_ADMIN_PASSWORD}
       - ODOO_RC=/etc/odoo/odoo.conf
     command:
       - bash
