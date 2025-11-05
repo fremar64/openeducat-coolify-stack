@@ -75,6 +75,11 @@ COPY check_backup_health.sh /usr/local/bin/check_backup_health.sh
 RUN sed -i 's/\r$//' /usr/local/bin/check_backup_health.sh \
     && chmod +x /usr/local/bin/check_backup_health.sh
 
+# Script de test de restauration
+COPY test_restore.sh /usr/local/bin/test_restore.sh
+RUN sed -i 's/\r$//' /usr/local/bin/test_restore.sh \
+    && chmod +x /usr/local/bin/test_restore.sh
+
 # Copier la configuration Odoo par défaut dans l'image
 RUN mkdir -p /etc/odoo
 COPY config/odoo.conf /etc/odoo/odoo.conf

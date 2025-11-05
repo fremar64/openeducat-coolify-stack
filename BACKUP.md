@@ -129,25 +129,91 @@ psql -U odoo -c "DROP DATABASE IF EXISTS odoo;"
 psql -U odoo -c "CREATE DATABASE odoo OWNER odoo;"
 
 # Restaurer depuis le backup
-pg_restore -h localhost -U odoo -d odoo -v /path/to/backup.dump
+pg_restore -h localhost -U odoo -d odoo -v /backups/backup_choisi.dump
 ```
 
 ### Étape 3 : Redémarrer Odoo
 
 Dans Coolify, redémarrer le service `web`.
 
-## 🧪 Test de restauration
+### Étape 4 : Vérifier le fonctionnement
 
-Il est recommandé de tester régulièrement la restauration :
+- Se connecter à l'interface Odoo
+- Vérifier l'accès admin
+- Tester les fonctionnalités critiques
+- Consulter les logs pour détecter des erreurs
 
-### Option 1 : Base de test locale
+## 📊 Monitoring# Lancer le test de restauration
+test_restore.sh /backups/odoo_db_YYYYMMDD_HHMMSS.dump
+```
+
+Le script va :
+1. ✅ Créer une base de test temporaire
+2. ✅ Restaurer le backup dedans
+3. ✅ Vérifier l'intégrité (tables, données, modules)
+4. ✅ Afficher un rapport détaillé
+5. ✅ Proposer de nettoyer ou garder la base de test
+
+**Sortie attendue :**
+```
+======================================
+🔄 TEST DE RESTAURATION BACKUP ODOO
+======================================
+
+📦 Backup sélectionné:
+  Fichier: /backups/odoo_db_20251105_025254.dump
+  Taille: 1.4M
+
+🔌 Vérification de la connexion PostgreSQL...
+✅ Connexion PostgreSQL OK
+
+🗄️  Création de la base de test: odoo_test_20251105_103045
+✅ Base de test créée
+
+📥 Restauration du backup (cela peut prendre quelques minutes)...
+[...logs de restauration...]
+✅ Restauration terminée en 15s
+
+🔍 Vérification de l'intégrité...
+  📊 Nombre de tables: 156
+  ✅ Table 'res_users': 2 lignes
+  ✅ Table 'res_partner': 5 lignes
+  ✅ Table 'ir_module_module': 89 lignes
+  ✅ Table 'ir_model': 234 lignes
+  ✅ Table 'res_company': 1 lignes
+
+📦 Modules installés dans la base restaurée:
+[...liste des modules...]
+
+👥 Utilisateurs dans la base restaurée:
+[...liste des utilisateurs...]
+
+======================================
+✅ TEST DE RESTAURATION RÉUSSI !
+
+La base de test 'odoo_test_20251105_103045' contient:
+  - 156 tables
+  - Toutes les tables critiques sont présentes
+  - Les données ont été restaurées
+======================================
+
+🧹 Que souhaitez-vous faire avec la base de test?
+  1) La SUPPRIMER maintenant (recommandé)
+  2) La GARDER pour inspection manuelle
+
+Votre choix (1/2): _
+```
+
+### Option 2 : Base de test manuelle
+
+Via le shell du service `db` :
 
 ```bash
 # Créer une base de test
 psql -U odoo -c "CREATE DATABASE odoo_test OWNER odoo;"
 
-# Restaurer dedans
-pg_restore -h db -U odoo -d odoo_test -v /backups/odoo_db_YYYYMMDD_HHMMSS.dump
+# Restaurer depuis le backup
+pg_restore -h localhost -U odoo -d odoo_test -v /chemin/vers/backup.dump
 
 # Vérifier
 psql -U odoo -d odoo_test -c "\dt"
@@ -156,12 +222,37 @@ psql -U odoo -d odoo_test -c "\dt"
 psql -U odoo -c "DROP DATABASE odoo_test;"
 ```
 
-### Option 2 : Instance de staging
+### Option 3 : Instance de staging
 
 Déployer une seconde instance OpenEduCat sur Coolify avec :
 - Base de données vierge
 - Restauration du dernier backup
 - Tests fonctionnels
+
+### Fréquence recommandée
+
+- **Mensuel** : Test complet avec script automatisé
+- **Trimestriel** : Test sur instance de staging
+- **Avant mise à jour majeure** : Toujours tester la restauration
+
+## 🔄 Restauration en production (procédure d'urgence)
+
+⚠️ **ATTENTION** : Cette procédure écrase la base de production !
+
+### Étape 1 : Arrêter Odoo temporairement
+
+Dans Coolify, arrêter le service `web`.
+
+### Étape 2 : Restaurer la base
+
+Via le shell du service `db` :
+
+```bash
+# Supprimer la base existante (⚠️ DESTRUCTIF !)
+psql -U odoo -c "DROP DATABASE IF EXISTS odoo;"
+
+# Recréer une base vide
+psql -U odoo -c "CREATE DATABASE odoo OWNER odoo;"
 
 ## 📊 Monitoring
 
