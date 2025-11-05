@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-dev \
     libfribidi-dev \
     libxcb1-dev \
+    rclone \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer les dépendances Python spécifiques à OpenEduCat

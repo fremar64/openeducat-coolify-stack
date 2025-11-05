@@ -16,11 +16,18 @@ else
 fi
 echo ""
 
-# Installer les dépendances (postgresql-client déjà présent dans l'image)
-echo "📦 Installation de rclone..."
-apt-get update > /dev/null 2>&1
-apt-get install -y rclone > /dev/null 2>&1
-echo "✅ Dépendances installées"
+# Vérifier que les outils nécessaires sont disponibles
+if ! command -v pg_dump &> /dev/null; then
+    echo "❌ ERREUR: pg_dump n'est pas disponible"
+    exit 1
+fi
+
+if [ -n "$RCLONE_DROPBOX_TOKEN" ] && ! command -v rclone &> /dev/null; then
+    echo "❌ ERREUR: rclone n'est pas disponible (nécessaire pour Dropbox)"
+    exit 1
+fi
+
+echo "✅ Outils disponibles: pg_dump$([ -n "$RCLONE_DROPBOX_TOKEN" ] && echo ", rclone")"
 echo ""
 
 # Configurer rclone si token Dropbox fourni
