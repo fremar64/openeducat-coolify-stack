@@ -70,6 +70,11 @@ COPY backup.sh /usr/local/bin/backup.sh
 RUN sed -i 's/\r$//' /usr/local/bin/backup.sh \
     && chmod +x /usr/local/bin/backup.sh
 
+# Script de diagnostic du système de backup
+COPY check_backup_health.sh /usr/local/bin/check_backup_health.sh
+RUN sed -i 's/\r$//' /usr/local/bin/check_backup_health.sh \
+    && chmod +x /usr/local/bin/check_backup_health.sh
+
 # Copier la configuration Odoo par défaut dans l'image
 RUN mkdir -p /etc/odoo
 COPY config/odoo.conf /etc/odoo/odoo.conf
